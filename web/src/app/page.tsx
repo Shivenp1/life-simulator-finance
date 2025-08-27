@@ -1,103 +1,189 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Legend,
+  Tooltip,
+  type ChartOptions,
+} from "chart.js";
 
-export default function Home() {
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Legend, Tooltip);
+
+// Color palette for datasets
+const COLORS = {
+  net: "#2563eb",        // blue
+  cash: "#059669",       // green
+  portfolio: "#f59e0b",  // amber
+  debt: "#ef4444",       // red
+};
+
+type Monthly = { month: number; cash: number; portfolio: number; debt: number; netWorth: number };
+type Result = {
+  inputs: any;
+  checkpoints: { final: { cash: number; portfolio: number; debt: number; netWorth: number } };
+  monthly: Monthly[];
+  summary: string;
+};
+
+export default function Page() {
+  const [form, setForm] = useState({
+    months: 120,
+    startingCash: 30000,
+    monthlyInvest: 400,
+    returnAnnual: 6,
+    loanBalance: 20000,
+    loanRateAnnual: 5,
+    loanMinPayment: 220,
+    loanExtraPayment: 0,
+  });
+  const [res, setRes] = useState<Result | null>(null);
+  const [loading, setLoading] = useState(false);
+  const api = "http://localhost:8080/simulate"; // backend
+
+  // helper to render labeled numeric inputs
+  const input = (label: string, key: keyof typeof form) => (
+    <label key={String(key)} className="flex flex-col gap-1 text-sm">
+      <span>{label}</span>
+      <input
+        type="number"
+        value={form[key] as number}
+        onChange={(e) => setForm((s) => ({ ...s, [key]: Number(e.target.value) }))}
+        className="p-2 border rounded"
+      />
+    </label>
+  );
+
+  async function run() {
+    setLoading(true);
+    const qs = new URLSearchParams(Object.entries(form as any)).toString();
+    const r = await fetch(`${api}?${qs}`);
+    const j = (await r.json()) as Result;
+    setRes(j);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const labels = res?.monthly.map((m) => m.month) ?? [];
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Net Worth",
+        data: res?.monthly.map((m) => m.netWorth) ?? [],
+        borderColor: COLORS.net,
+        backgroundColor: COLORS.net + "33",
+        borderWidth: 2,
+        tension: 0.2,
+        pointRadius: 0,
+      },
+      {
+        label: "Cash",
+        data: res?.monthly.map((m) => m.cash) ?? [],
+        borderColor: COLORS.cash,
+        backgroundColor: COLORS.cash + "33",
+        borderWidth: 2,
+        tension: 0.2,
+        pointRadius: 0,
+      },
+      {
+        label: "Portfolio",
+        data: res?.monthly.map((m) => m.portfolio) ?? [],
+        borderColor: COLORS.portfolio,
+        backgroundColor: COLORS.portfolio + "33",
+        borderWidth: 2,
+        tension: 0.2,
+        pointRadius: 0,
+      },
+      {
+        label: "Debt",
+        data: res?.monthly.map((m) => m.debt) ?? [],
+        borderColor: COLORS.debt,
+        backgroundColor: COLORS.debt + "33",
+        borderWidth: 2,
+        tension: 0.2,
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const chartOptions: ChartOptions<"line"> = {
+    responsive: true,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { labels: { usePointStyle: true } },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}`,
+        },
+      },
+    },
+    scales: {
+      x: { ticks: { maxTicksLimit: 12 } },
+      y: {
+        ticks: {
+          callback: (value) =>
+            typeof value === "number" ? value.toLocaleString() : String(value),
+        },
+      },
+    },
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="p-6 font-sans">
+      <h1 className="text-2xl font-bold mb-2">Life Event Financial Simulator</h1>
+      <p className="text-gray-600 mb-4">
+        Edit inputs and run the simulation. Data comes from your Java backend at <code>:8080</code>.
+      </p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        {input("Months", "months")}
+        {input("Starting Cash ($)", "startingCash")}
+        {input("Monthly Invest ($)", "monthlyInvest")}
+        {input("Annual Return (%)", "returnAnnual")}
+        {input("Loan Balance ($)", "loanBalance")}
+        {input("Loan Rate (%)", "loanRateAnnual")}
+        {input("Loan Min Payment ($)", "loanMinPayment")}
+        {input("Loan Extra Payment ($)", "loanExtraPayment")}
+      </div>
+
+      <button
+        onClick={run}
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        {loading ? "Running..." : "Run Simulation"}
+      </button>
+
+      {res && (
+        <>
+          <div className="flex flex-wrap gap-6 mt-6 text-lg">
+            <div>
+              Final Net Worth: <b>${res.checkpoints.final.netWorth.toLocaleString()}</b>
+            </div>
+            <div>Cash: <b>${res.checkpoints.final.cash.toLocaleString()}</b></div>
+            <div>
+              Portfolio: <b>${res.checkpoints.final.portfolio.toLocaleString()}</b>
+            </div>
+            <div>Debt: <b>${res.checkpoints.final.debt.toLocaleString()}</b></div>
+          </div>
+
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+
+          <p className="mt-4 text-gray-700">{res.summary}</p>
+        </>
+      )}
+    </main>
   );
 }

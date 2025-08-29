@@ -266,7 +266,30 @@ public class SimulationEndpoint implements HttpHandler {
                 .append("\"loanMinPayment\":").append(round2num(loanMinPayment)).append(",")
                 .append("\"loanExtraPayment\":").append(round2num(loanExtraPayment)).append(",")
                 .append("\"salaryAnnual\":").append(round2num(salaryAnnual)).append(",")
-                .append("\"monthlyExpenses\":").append(round2num(monthlyExpenses))
+                .append("\"monthlyExpenses\":").append(round2num(monthlyExpenses)).append(",")
+                // FIXED: Add car parameters to inputs
+                .append("\"carBuyMonth\":").append(carBuyMonth).append(",")
+                .append("\"carPrice\":").append(round2num(carPrice)).append(",")
+                .append("\"carDownPaymentPercent\":").append(round2num(carDownPaymentPercent)).append(",")
+                .append("\"carLoanRate\":").append(round2num(carLoanRate)).append(",")
+                .append("\"carLoanYears\":").append(carLoanYears).append(",")
+                .append("\"carInsuranceMonthly\":").append(round2num(carInsuranceMonthly)).append(",")
+                .append("\"carGasMonthly\":").append(round2num(carGasMonthly)).append(",")
+                .append("\"carMaintenanceMonthly\":").append(round2num(carMaintenanceMonthly)).append(",")
+                // Add house parameters to inputs
+                .append("\"houseBuyMonth\":").append(houseBuyMonth).append(",")
+                .append("\"homePrice\":").append(round2num(homePrice)).append(",")
+                .append("\"downPaymentPercent\":").append(round2num(downPaymentPercent)).append(",")
+                .append("\"mortgageRate\":").append(round2num(mortgageRate)).append(",")
+                .append("\"propertyTaxRate\":").append(round2num(propertyTaxRate)).append(",")
+                .append("\"homeMaintenancePercent\":").append(round2num(homeMaintenancePercent)).append(",")
+                .append("\"homeAppreciationAnnual\":").append(round2num(homeAppreciationAnnual)).append(",")
+                // Add education parameters to inputs
+                .append("\"collegeStartMonth\":").append(collegeStartMonth).append(",")
+                .append("\"collegeCost\":").append(round2num(collegeCost)).append(",")
+                .append("\"studentLoanAmount\":").append(round2num(studentLoanAmount)).append(",")
+                .append("\"studentLoanRate\":").append(round2num(studentLoanRate)).append(",")
+                .append("\"studentLoanYears\":").append(studentLoanYears)
             .append("},")
             .append("\"lifeEvents\":[");
         
@@ -382,7 +405,7 @@ public class SimulationEndpoint implements HttpHandler {
                                 / (Math.pow(1 + monthlyRate, totalPayments) - 1);
         
         double propertyTax = (homePrice * (propertyTaxRate / 100.0)) / 12.0;
-        double maintenance = (homePrice * (maintenancePercent / 100.0)) / 12.0;
+        double maintenance = (homePrice * (propertyTaxRate / 100.0)) / 12.0;
         
         return Math.round((mortgagePayment + propertyTax + maintenance) * 100.0) / 100.0;
     }

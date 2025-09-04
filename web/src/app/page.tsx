@@ -21,6 +21,8 @@ export default function Page() {
   const [carPrice, setCarPrice] = useState(0);
   const [hasCar, setHasCar] = useState(false);
   const [totalSavings, setTotalSavings] = useState(0);
+  const [monthlySP500Investment, setMonthlySP500Investment] = useState(0);
+  const [totalSP500Value, setTotalSP500Value] = useState(0);
   const [activeTab, setActiveTab] = useState("Simulator");
   const [showResetWarning, setShowResetWarning] = useState(false);
 
@@ -31,6 +33,15 @@ export default function Page() {
     } else {
       setCurrentAge(prev => prev + 1);
       setCurrentSalary(prev => prev * (1 + form.salaryGrowthPercent / 100));
+      
+      // Apply 10% growth to monthly S&P 500 investment
+      if (monthlySP500Investment > 0) {
+        setTotalSP500Value(prev => {
+          const monthlyContribution = monthlySP500Investment * 12; // Annual contribution
+          const newValue = (prev + monthlyContribution) * 1.10; // Apply 10% growth
+          return newValue;
+        });
+      }
     }
     
     setCurrentYear(prev => prev + 1);
@@ -68,6 +79,8 @@ export default function Page() {
     setCarPrice(0);
     setHasCar(false);
     setTotalSavings(0);
+    setMonthlySP500Investment(0);
+    setTotalSP500Value(0);
     setActiveTab("Simulator");
     setShowResetWarning(false);
   };
@@ -115,10 +128,11 @@ export default function Page() {
       const yearlyAfterTax = currentSalaryForYear - federalTax - njTax;
       const monthlyTakeHomeForYear = yearlyAfterTax / 12;
       
-      // Calculate expenses for this year (including house if purchased)
+      // Calculate expenses for this year (including house if purchased and monthly investment)
       const monthlyExpenses = 200 + 300 + 200 + 500 + 300; // Utilities + Groceries + Entertainment + Savings + Other
       const monthlyHousingExpenses = hasHouse ? totalMonthlyHousingCost : 0;
-      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses;
+      const monthlyInvestmentExpense = monthlySP500Investment;
+      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses + monthlyInvestmentExpense;
       
       const monthlyNetForYear = monthlyTakeHomeForYear - totalMonthlyExpenses;
       const yearlyNetForYear = Math.max(monthlyNetForYear * 12, 0);
@@ -240,6 +254,10 @@ export default function Page() {
             setBankBalance={(amount) => setTotalSavings(amount)}
             currentYear={currentYear}
             currentAge={currentAge}
+            monthlySP500Investment={monthlySP500Investment}
+            setMonthlySP500Investment={setMonthlySP500Investment}
+            totalSP500Value={totalSP500Value}
+            setTotalSP500Value={setTotalSP500Value}
           />
         )}
 
@@ -255,6 +273,8 @@ export default function Page() {
             currentYear={currentYear}
             totalSavings={totalSavings}
             setTotalSavings={setTotalSavings}
+            monthlySP500Investment={monthlySP500Investment}
+            totalSP500Value={totalSP500Value}
           />
         )}
       </div>

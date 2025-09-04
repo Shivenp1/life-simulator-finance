@@ -8,6 +8,8 @@ interface FinancialStatusTabProps {
   currentYear: number;
   totalSavings: number;
   setTotalSavings: (amount: number) => void;
+  monthlySP500Investment: number;
+  totalSP500Value: number;
 }
 
 export const FinancialStatusTab = ({
@@ -19,7 +21,9 @@ export const FinancialStatusTab = ({
   totalMonthlyHousingCost,
   currentYear,
   totalSavings,
-  setTotalSavings
+  setTotalSavings,
+  monthlySP500Investment,
+  totalSP500Value
 }: FinancialStatusTabProps) => {
   // NJ Tax calculation (simplified)
   const calculateAfterTaxIncome = (salary: number) => {
@@ -49,6 +53,7 @@ export const FinancialStatusTab = ({
   // Budget categories with typical amounts
   const budgetCategories = [
     { name: "Housing", amount: hasHouse ? totalMonthlyHousingCost : 0, color: "bg-red-100 text-red-800" },
+    { name: "S&P 500 Investment", amount: monthlySP500Investment, color: "bg-indigo-100 text-indigo-800" },
     { name: "Utilities", amount: 200, color: "bg-orange-100 text-orange-800" },
     { name: "Groceries", amount: 300, color: "bg-yellow-100 text-yellow-800" },
     { name: "Entertainment", amount: 200, color: "bg-purple-100 text-purple-800" },
@@ -114,6 +119,9 @@ export const FinancialStatusTab = ({
                 </>
               ) : (
                 <p className="text-gray-500">No house purchased yet</p> 
+              )}
+              {monthlySP500Investment > 0 && (
+                <p><span className="text-gray-600">S&P 500 Portfolio:</span> <span className="font-medium text-indigo-600">${totalSP500Value.toLocaleString()}</span></p>
               )}
             </div>
           </div>

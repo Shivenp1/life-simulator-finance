@@ -11,7 +11,6 @@ interface PurchasesTabProps {
   carPrice: number;
   setCarPrice: (price: number) => void;
   onBuyCar: () => void;
-  bankBalance: number;
 }
 
 export const PurchasesTab = ({
@@ -24,8 +23,7 @@ export const PurchasesTab = ({
   hasCar,
   carPrice,
   setCarPrice,
-  onBuyCar,
-  bankBalance
+  onBuyCar
 }: PurchasesTabProps) => {
   const [downPaymentPercent, setDownPaymentPercent] = useState(10); // Default 10%
   
@@ -48,16 +46,19 @@ export const PurchasesTab = ({
   
   const totalMonthlyPayment = monthlyMortgage + monthlyPropertyTaxes + monthlyHomeInsurance + monthlyPMI;
 
+  
   // Car calculations
   const carDownPayment = carPrice * 0.20; // 20% down for cars
   const carLoanAmount = carPrice - carDownPayment;
-  const monthlyCarPayment = carLoanAmount * 0.049 / 12; // 4.9% rate, 5 years
+  
+  // Proper car loan calculation with 4.9% APR for 60 months
+  const monthlyRate = 0.049 / 12; // 4.9% annual rate divided by 12 months
+  const numPayments = 60; // 60 months
+  const monthlyCarPayment = carLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+  
   const monthlyCarInsurance = carPrice * 0.012 / 12; // 1.2% annually for insurance
   const monthlyCarMaintenance = carPrice * 0.01 / 12; // 1% annually for maintenance
   const totalMonthlyCarCost = monthlyCarPayment + monthlyCarInsurance + monthlyCarMaintenance;
-
-  const canAffordHouse = bankBalance >= downPayment;
-  const canAffordCar = bankBalance >= carDownPayment;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -147,39 +148,15 @@ export const PurchasesTab = ({
                     )}
                   </p>
                 </div>
-                
-                {/* Affordability Check */}
-                <div className="mt-3 p-3 rounded-lg border-l-4 border-blue-400 bg-blue-50">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-800">Your Bank Balance:</span>
-                    <span className="font-bold text-blue-600">${bankBalance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-800">Required Down Payment:</span>
-                    <span className="font-bold text-blue-600">${downPayment.toLocaleString()}</span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-800">Can Afford:</span>
-                    <span className={`font-bold text-lg ${canAffordHouse ? 'text-green-600' : 'text-red-600'}`}>
-                      {canAffordHouse ? '✅ Yes' : '❌ No'}
-                    </span>
-                  </div>
-                  {!canAffordHouse && (
-                    <p className="text-xs text-red-600 mt-1">
-                      You need ${(downPayment - bankBalance).toLocaleString()} more to afford this house
-                    </p>
-                  )}
-                </div>
               </div>
             )}
             
             <button
               onClick={onBuyHouse}
-              disabled={housePrice === 0 || !canAffordHouse}
+              disabled={housePrice === 0}
               className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {!canAffordHouse ? '❌ Cannot Afford' : '🏠 Buy This House!'}
+              🏠 Buy This House!
             </button>
           </div>
         ) : (
@@ -274,39 +251,15 @@ export const PurchasesTab = ({
                     <strong>Down Payment (20%):</strong> ${carDownPayment.toLocaleString()}
                   </p>
                 </div>
-                
-                {/* Affordability Check */}
-                <div className="mt-3 p-3 rounded-lg border-l-4 border-blue-400 bg-blue-50">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-800">Your Bank Balance:</span>
-                    <span className="font-bold text-blue-600">${bankBalance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-800">Required Down Payment:</span>
-                    <span className="font-bold text-blue-600">${carDownPayment.toLocaleString()}</span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-800">Can Afford:</span>
-                    <span className={`font-bold text-lg ${canAffordCar ? 'text-green-600' : 'text-red-600'}`}>
-                      {canAffordCar ? '✅ Yes' : '❌ No'}
-                    </span>
-                  </div>
-                  {!canAffordCar && (
-                    <p className="text-xs text-red-600 mt-1">
-                      You need ${(carDownPayment - bankBalance).toLocaleString()} more to afford this car
-                    </p>
-                  )}
-                </div>
               </div>
             )}
             
             <button
               onClick={onBuyCar}
-              disabled={carPrice === 0 || !canAffordCar}
+              disabled={carPrice === 0}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {!canAffordCar ? '❌ Cannot Afford' : '🚗 Buy This Car!'}
+              🚗 Buy This Car!
             </button>
           </div>
         ) : (

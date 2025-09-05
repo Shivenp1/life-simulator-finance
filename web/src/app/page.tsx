@@ -100,6 +100,42 @@ export default function Page() {
   const monthlyPMI = annualPMI / 12;
   const totalMonthlyHousingCost = housePrice > 0 ? monthlyMortgagePayment + monthlyPropertyTaxes + monthlyHomeInsurance + monthlyPMI : 0;
 
+  // Calculate total monthly car cost
+  const carDownPayment = carPrice * 0.20;
+  const carLoanAmount = carPrice - carDownPayment;
+  const monthlyRate = 0.049 / 12; // 4.9% annual rate divided by 12 months
+  const numPayments = 60; // 60 months
+  const monthlyCarPayment = carLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+  const monthlyCarInsurance = carPrice * 0.012 / 12; // 1.2% annually for insurance
+  const monthlyCarMaintenance = carPrice * 0.01 / 12; // 1% annually for maintenance
+  const totalMonthlyCarCost = hasCar ? monthlyCarPayment + monthlyCarInsurance + monthlyCarMaintenance : 0;
+
+  // Calculate monthly take-home and expenses
+  const calculateAfterTaxIncome = (salary: number) => {
+    let federalTax = 0;
+    if (salary <= 11600) federalTax = salary * 0.10;
+    else if (salary <= 47150) federalTax = 1160 + (salary - 11600) * 0.12;
+    else if (salary <= 100525) federalTax = 5428 + (salary - 47150) * 0.22;
+    else if (salary <= 191950) federalTax = 17470 + (salary - 100525) * 0.24;
+    else federalTax = 41847 + (salary - 191950) * 0.32;
+    
+    let njTax = 0;
+    if (salary <= 20000) njTax = salary * 0.014;
+    else if (salary <= 35000) njTax = 280 + (salary - 20000) * 0.0175;
+    else if (salary <= 40000) njTax = 542.50 + (salary - 40000) * 0.035;
+    else if (salary <= 75000) njTax = 717.50 + (salary - 40000) * 0.05525;
+    else if (salary <= 500000) njTax = 2665.63 + (salary - 75000) * 0.0637;
+    else njTax = 30365.63 + (salary - 500000) * 0.0899;
+    
+    return salary - federalTax - njTax;
+  };
+
+  const afterTaxIncome = calculateAfterTaxIncome(currentSalary);
+  const monthlyTakeHome = afterTaxIncome / 12;
+  
+  const monthlyExpenses = 200 + 300 + 200 + 500 + 300; // Utilities + Groceries + Entertainment + Savings + Other
+  const totalExpenses = monthlyExpenses + totalMonthlyHousingCost + totalMonthlyCarCost + monthlySP500Investment;
+
   // Calculate accumulated money based on years simulated
   const calculateAccumulatedMoney = () => {
     if (currentYear <= 1) return 0; // No money accumulated in year 1
@@ -131,8 +167,9 @@ export default function Page() {
       // Calculate expenses for this year (including house if purchased and monthly investment)
       const monthlyExpenses = 200 + 300 + 200 + 500 + 300; // Utilities + Groceries + Entertainment + Savings + Other
       const monthlyHousingExpenses = hasHouse ? totalMonthlyHousingCost : 0;
+      const monthlyCarExpenses = hasCar ? totalMonthlyCarCost : 0;
       const monthlyInvestmentExpense = monthlySP500Investment;
-      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses + monthlyInvestmentExpense;
+      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses + monthlyCarExpenses + monthlyInvestmentExpense;
       
       const monthlyNetForYear = monthlyTakeHomeForYear - totalMonthlyExpenses;
       const yearlyNetForYear = Math.max(monthlyNetForYear * 12, 0);
@@ -243,7 +280,6 @@ export default function Page() {
             carPrice={carPrice}
             setCarPrice={setCarPrice}
             onBuyCar={handleBuyCar}
-            bankBalance={accumulatedMoney}
           />
         )}
 
@@ -258,6 +294,8 @@ export default function Page() {
             setMonthlySP500Investment={setMonthlySP500Investment}
             totalSP500Value={totalSP500Value}
             setTotalSP500Value={setTotalSP500Value}
+            monthlyTakeHome={monthlyTakeHome}
+            monthlyExpenses={totalExpenses}
           />
         )}
 
@@ -275,6 +313,9 @@ export default function Page() {
             setTotalSavings={setTotalSavings}
             monthlySP500Investment={monthlySP500Investment}
             totalSP500Value={totalSP500Value}
+            hasCar={hasCar}
+            carPrice={carPrice}
+            totalMonthlyCarCost={totalMonthlyCarCost}
           />
         )}
       </div>

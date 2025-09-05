@@ -9,6 +9,8 @@ interface InvestmentsTabProps {
   setMonthlySP500Investment: (amount: number) => void;
   totalSP500Value: number;
   setTotalSP500Value: (amount: number) => void;
+  monthlyTakeHome: number;
+  monthlyExpenses: number;
 }
 
 export const InvestmentsTab = ({
@@ -19,57 +21,19 @@ export const InvestmentsTab = ({
   monthlySP500Investment,
   setMonthlySP500Investment,
   totalSP500Value,
-  setTotalSP500Value
+  setTotalSP500Value,
+  monthlyTakeHome,
+  monthlyExpenses
 }: InvestmentsTabProps) => {
-  const [investments, setInvestments] = useState({
-    sp500: 0,
-    savingsAccount: 0
-  });
+  const [customAmount, setCustomAmount] = useState(500);
 
-  // Investment returns (annual)
-  const sp500Return = 0.10; // 10% average annual return
-  const savingsReturn = 0.02; // 2% annual return
+  // Calculate available monthly income after expenses
+  const availableMonthlyIncome = monthlyTakeHome - monthlyExpenses;
+  const maxAffordableInvestment = Math.max(0, availableMonthlyIncome);
 
-  const totalInvestments = investments.sp500 + investments.savingsAccount + totalSP500Value;
-  const totalValue = totalInvestments;
-
-  const investInSP500 = (amount: number) => {
-    if (amount <= bankBalance && amount > 0) {
-      setInvestments(prev => ({
-        ...prev,
-        sp500: prev.sp500 + amount
-      }));
-      setBankBalance(prev => prev - amount);
-    }
-  };
-
-  const investInSavings = (amount: number) => {
-    if (amount <= bankBalance && amount > 0) {
-      setInvestments(prev => ({
-        ...prev,
-        savingsAccount: prev.savingsAccount + amount
-      }));
-      setBankBalance(prev => prev - amount);
-    }
-  };
-
-  const withdrawFromSP500 = (amount: number) => {
-    if (amount <= investments.sp500 && amount > 0) {
-      setInvestments(prev => ({
-        ...prev,
-        sp500: prev.sp500 - amount
-      }));
-      setBankBalance(prev => prev + amount);
-    }
-  };
-
-  const withdrawFromSavings = (amount: number) => {
-    if (amount <= investments.savingsAccount && amount > 0) {
-      setInvestments(prev => ({
-        ...prev,
-        savingsAccount: prev.savingsAccount - amount
-      }));
-      setBankBalance(prev => prev + amount);
+  const setMonthlyInvestment = (amount: number) => {
+    if (amount >= 0 && amount <= maxAffordableInvestment) {
+      setMonthlySP500Investment(amount);
     }
   };
 
@@ -77,7 +41,7 @@ export const InvestmentsTab = ({
     if (monthlySP500Investment > 0) {
       setMonthlySP500Investment(0);
     } else {
-      setMonthlySP500Investment(500);
+      setMonthlySP500Investment(Math.min(customAmount, maxAffordableInvestment));
     }
   };
 
@@ -86,47 +50,37 @@ export const InvestmentsTab = ({
       {/* Investment Overview */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          📈 Investment Portfolio
+          📈 S&P 500 Monthly Investment
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-            <h4 className="font-medium text-blue-800 mb-2">S&P 500 (Lump Sum)</h4>
-            <div className="text-2xl font-bold text-blue-600">
-              ${investments.sp500.toLocaleString()}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
+            <h4 className="font-medium text-indigo-800 mb-2">Monthly Investment</h4>
+            <div className="text-2xl font-bold text-indigo-600">
+              ${monthlySP500Investment.toLocaleString()}
             </div>
-            <p className="text-sm text-blue-700 mt-1">
-              Expected return: 10% annually
+            <p className="text-sm text-indigo-700 mt-1">
+              Per month • 10% annually
             </p>
           </div>
           
-          <div className="p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
-            <h4 className="font-medium text-indigo-800 mb-2">S&P 500 (Monthly)</h4>
-            <div className="text-2xl font-bold text-indigo-600">
+          <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+            <h4 className="font-medium text-blue-800 mb-2">Total Portfolio Value</h4>
+            <div className="text-2xl font-bold text-blue-600">
               ${totalSP500Value.toLocaleString()}
             </div>
-            <p className="text-sm text-indigo-700 mt-1">
-              ${monthlySP500Investment}/month • 10% annually
+            <p className="text-sm text-blue-700 mt-1">
+              Current value with growth
             </p>
           </div>
           
           <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-            <h4 className="font-medium text-green-800 mb-2">Savings Account</h4>
+            <h4 className="font-medium text-green-800 mb-2">Available Monthly Income</h4>
             <div className="text-2xl font-bold text-green-600">
-              ${investments.savingsAccount.toLocaleString()}
+              ${availableMonthlyIncome.toLocaleString()}
             </div>
             <p className="text-sm text-green-700 mt-1">
-              Expected return: 2% annually
-            </p>
-          </div>
-          
-          <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-            <h4 className="font-medium text-purple-800 mb-2">Total Portfolio</h4>
-            <div className="text-2xl font-bold text-purple-600">
-              ${totalValue.toLocaleString()}
-            </div>
-            <p className="text-sm text-purple-700 mt-1">
-              Available: ${bankBalance.toLocaleString()}
+              After all expenses
             </p>
           </div>
         </div>
@@ -135,26 +89,88 @@ export const InvestmentsTab = ({
       {/* Monthly Investment Settings */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-           Monthly Investment Settings
+          💰 Set Monthly Investment Amount
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Custom Amount Input */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-700">Monthly Investment Amount</h4>
+            <div className="flex items-center space-x-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Amount per month
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter amount"
+                    min="0"
+                    max={maxAffordableInvestment}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Maximum: ${maxAffordableInvestment.toLocaleString()} (your available monthly income)
+                </p>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <button
+                  onClick={() => setCustomAmount(100)}
+                  disabled={100 > maxAffordableInvestment}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  $100
+                </button>
+                <button
+                  onClick={() => setCustomAmount(500)}
+                  disabled={500 > maxAffordableInvestment}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  $500
+                </button>
+                <button
+                  onClick={() => setCustomAmount(1000)}
+                  disabled={1000 > maxAffordableInvestment}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  $1,000
+                </button>
+                <button
+                  onClick={() => setCustomAmount(maxAffordableInvestment)}
+                  disabled={maxAffordableInvestment <= 0}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  All Available
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Investment Control */}
           <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
             <div>
               <h4 className="font-medium text-indigo-800">Monthly S&P 500 Investment</h4>
               <p className="text-sm text-indigo-700">
-                Automatically invest ${monthlySP500Investment} every month. This will be deducted from your monthly expenses.
+                {monthlySP500Investment > 0 
+                  ? `Currently investing $${monthlySP500Investment.toLocaleString()} every month. This will be deducted from your monthly expenses.`
+                  : `Set an amount above to start monthly investing.`
+                }
               </p>
             </div>
             <button
               onClick={toggleMonthlySP500}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              disabled={customAmount <= 0 || customAmount > maxAffordableInvestment || (monthlySP500Investment === 0 && maxAffordableInvestment <= 0)}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed ${
                 monthlySP500Investment > 0
                   ? "bg-red-600 text-white hover:bg-red-700"
                   : "bg-indigo-600 text-white hover:bg-indigo-700"
               }`}
             >
-              {monthlySP500Investment > 0 ? "Stop Monthly Investment" : "Start $500/month"}
+              {monthlySP500Investment > 0 ? "Stop Monthly Investment" : `Start $${customAmount.toLocaleString()}/month`}
             </button>
           </div>
           
@@ -164,7 +180,7 @@ export const InvestmentsTab = ({
                 <div className="text-green-500 text-xl mr-3">✅</div>
                 <div>
                   <p className="text-sm font-medium text-green-800">
-                    Monthly investment active! ${monthlySP500Investment} will be automatically invested each month.
+                    Monthly investment active! ${monthlySP500Investment.toLocaleString()} will be automatically invested each month.
                   </p>
                   <p className="text-xs text-green-600 mt-1">
                     This amount will be deducted from your monthly expenses in the Financial Status tab.
@@ -173,172 +189,89 @@ export const InvestmentsTab = ({
               </div>
             </div>
           )}
+
+          {maxAffordableInvestment <= 0 && (
+            <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
+              <div className="flex items-center">
+                <div className="text-red-500 text-xl mr-3">⚠️</div>
+                <div>
+                  <p className="text-sm font-medium text-red-800">
+                    You don't have enough monthly income left for any investment.
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Your monthly expenses exceed your take-home pay. Consider reducing expenses first.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {customAmount > maxAffordableInvestment && maxAffordableInvestment > 0 && (
+            <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+              <div className="flex items-center">
+                <div className="text-yellow-500 text-xl mr-3">⚠️</div>
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">
+                    You can't afford this investment amount with your current monthly income.
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Maximum affordable: ${maxAffordableInvestment.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Investment Actions */}
+      {/* Investment Information */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          💰 One-Time Investment Actions
+          📊 Investment Information
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* S&P 500 Investment */}
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-700">S&P 500 (Lump Sum)</h4>
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => investInSP500(1000)}
-                  disabled={bankBalance < 1000}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $1,000
-                </button>
-                <button
-                  onClick={() => investInSP500(5000)}
-                  disabled={bankBalance < 5000}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $5,000
-                </button>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => investInSP500(10000)}
-                  disabled={bankBalance < 10000}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $10,000
-                </button>
-                <button
-                  onClick={() => investInSP500(bankBalance)}
-                  disabled={bankBalance <= 0}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest All
-                </button>
-              </div>
-            </div>
+            <h4 className="font-medium text-gray-700">How It Works</h4>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Set any monthly amount you can afford
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Amount is deducted from monthly expenses
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Investment grows by 10% annually
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                You can start/stop anytime
+              </li>
+            </ul>
           </div>
-
-          {/* Savings Account Investment */}
+          
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-700">Savings Account</h4>
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => investInSavings(1000)}
-                  disabled={bankBalance < 1000}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $1,000
-                </button>
-                <button
-                  onClick={() => investInSavings(5000)}
-                  disabled={bankBalance < 5000}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $5,000
-                </button>
+            <h4 className="font-medium text-gray-700">Monthly Budget</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Monthly Take Home:</span>
+                <span className="font-medium">${monthlyTakeHome.toLocaleString()}</span>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => investInSavings(10000)}
-                  disabled={bankBalance < 10000}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest $10,000
-                </button>
-                <button
-                  onClick={() => investInSavings(bankBalance)}
-                  disabled={bankBalance <= 0}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Invest All
-                </button>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Monthly Expenses:</span>
+                <span className="font-medium">${monthlyExpenses.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Available for Investment:</span>
+                <span className="font-medium text-green-600">${availableMonthlyIncome.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Withdrawal Actions */}
-      {(investments.sp500 > 0 || investments.savingsAccount > 0) && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            💸 Withdraw Funds
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* S&P 500 Withdrawal */}
-            {investments.sp500 > 0 && (
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-700">Withdraw from S&P 500</h4>
-                <div className="space-y-3">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => withdrawFromSP500(1000)}
-                      disabled={investments.sp500 < 1000}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      Withdraw $1,000
-                    </button>
-                    <button
-                      onClick={() => withdrawFromSP500(5000)}
-                      disabled={investments.sp500 < 5000}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      Withdraw $5,000
-                    </button>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => withdrawFromSP500(investments.sp500)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                    >
-                      Withdraw All
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Savings Account Withdrawal */}
-            {investments.savingsAccount > 0 && (
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-700">Withdraw from Savings</h4>
-                <div className="space-y-3">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => withdrawFromSavings(1000)}
-                      disabled={investments.savingsAccount < 1000}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      Withdraw $1,000
-                    </button>
-                    <button
-                      onClick={() => withdrawFromSavings(5000)}
-                      disabled={investments.savingsAccount < 5000}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      Withdraw $5,000
-                    </button>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => withdrawFromSavings(investments.savingsAccount)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                    >
-                      Withdraw All
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

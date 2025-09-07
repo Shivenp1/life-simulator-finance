@@ -1,5 +1,3 @@
-import { InputField } from './InputField';
-
 interface SimulatorTabProps {
   form: {
     startingSalary: number;
@@ -27,56 +25,62 @@ export const SimulatorTab = ({
   hasRental,
   onGoToPurchases
 }: SimulatorTabProps) => {
-  // Allow first year completion, but require housing (house OR rental) for year 2 and beyond
   const canAdvance = currentYear === 1 || hasHouse || hasRental;
+  const hasHousing = hasHouse || hasRental;
+  
+  const inputClassName = "w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium";
+  
+  const getHousingStatus = () => {
+    if (currentYear === 1) return { text: 'Not Required', color: 'text-blue-700' };
+    if (hasHousing) return { text: hasHouse ? 'House' : 'Apartment', color: 'text-green-700' };
+    return { text: 'Required', color: 'text-red-700' };
+  };
+
+  const housingStatus = getHousingStatus();
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6"> Life Simulator</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Life Simulator</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Starting Salary ($)
-              </label>
-              <input
-                type="number"
-                value={form.startingSalary || ''}
-                onChange={(e) => setForm({...form, startingSalary: parseInt(e.target.value) || 0})}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                placeholder="50000"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Starting Age
-              </label>
-              <input
-                type="number"
-                value={form.age || ''}
-                onChange={(e) => setForm({...form, age: parseInt(e.target.value) || 0})}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                placeholder="22"
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Starting Salary ($)
+            </label>
+            <input
+              type="number"
+              value={form.startingSalary || ''}
+              onChange={(e) => setForm({...form, startingSalary: parseInt(e.target.value) || 0})}
+              className={inputClassName}
+              placeholder="50000"
+            />
           </div>
           
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Annual Salary Growth (%)
-              </label>
-              <input
-                type="number"
-                value={form.salaryGrowthPercent || ''}
-                onChange={(e) => setForm({...form, salaryGrowthPercent: parseInt(e.target.value) || 0})}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                placeholder="5"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Starting Age
+            </label>
+            <input
+              type="number"
+              value={form.age || ''}
+              onChange={(e) => setForm({...form, age: parseInt(e.target.value) || 0})}
+              className={inputClassName}
+              placeholder="22"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Annual Salary Growth (%)
+            </label>
+            <input
+              type="number"
+              value={form.salaryGrowthPercent || ''}
+              onChange={(e) => setForm({...form, salaryGrowthPercent: parseInt(e.target.value) || 0})}
+              className={inputClassName}
+              placeholder="5"
+            />
           </div>
         </div>
 
@@ -97,12 +101,8 @@ export const SimulatorTab = ({
             </div>
             <div className="bg-white p-3 rounded border">
               <span className="text-gray-700 font-medium">Housing:</span>
-              <span className={`font-bold ml-2 text-lg ${
-                currentYear === 1 ? 'text-blue-700' : 
-                canAdvance ? 'text-green-700' : 'text-red-700'
-              }`}>
-                {currentYear === 1 ? 'Not Required' : 
-                 canAdvance ? (hasHouse ? 'House' : 'Apartment') : 'Required'}
+              <span className={`font-bold ml-2 text-lg ${housingStatus.color}`}>
+                {housingStatus.text}
               </span>
             </div>
           </div>

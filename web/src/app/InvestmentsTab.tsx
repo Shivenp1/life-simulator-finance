@@ -1,38 +1,30 @@
 import { useState } from "react";
 
 interface InvestmentsTabProps {
-  bankBalance: number;
-  setBankBalance: (amount: number) => void;
   currentYear: number;
   currentAge: number;
   monthlySP500Investment: number;
   setMonthlySP500Investment: (amount: number) => void;
   totalSP500Value: number;
-  setTotalSP500Value: (amount: number) => void;
   monthlyTakeHome: number;
   monthlyExpenses: number;
+  availableMonthlyIncome: number; // Pass from parent instead of calculating here
 }
 
 export const InvestmentsTab = ({
-  bankBalance,
-  setBankBalance,
   currentYear,
   currentAge,
   monthlySP500Investment,
   setMonthlySP500Investment,
   totalSP500Value,
-  setTotalSP500Value,
   monthlyTakeHome,
-  monthlyExpenses
+  monthlyExpenses,
+  availableMonthlyIncome
 }: InvestmentsTabProps) => {
   const [customAmount, setCustomAmount] = useState(500);
 
-  // Calculate available monthly income after expenses
-  const availableMonthlyIncome = monthlyTakeHome - monthlyExpenses;
-  const maxAffordableInvestment = Math.max(0, availableMonthlyIncome);
-
   const setMonthlyInvestment = (amount: number) => {
-    if (amount >= 0 && amount <= maxAffordableInvestment) {
+    if (amount >= 0 && amount <= availableMonthlyIncome) {
       setMonthlySP500Investment(amount);
     }
   };
@@ -41,9 +33,12 @@ export const InvestmentsTab = ({
     if (monthlySP500Investment > 0) {
       setMonthlySP500Investment(0);
     } else {
-      setMonthlySP500Investment(Math.min(customAmount, maxAffordableInvestment));
+      setMonthlySP500Investment(Math.min(customAmount, availableMonthlyIncome));
     }
   };
+
+  // Preset amounts for cleaner code
+  const presetAmounts = [100, 500, 1000];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -110,38 +105,27 @@ export const InvestmentsTab = ({
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Enter amount"
                     min="0"
-                    max={maxAffordableInvestment}
+                    max={availableMonthlyIncome}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Maximum: ${maxAffordableInvestment.toLocaleString()} (your available monthly income)
+                  Maximum: ${availableMonthlyIncome.toLocaleString()} (your available monthly income)
                 </p>
               </div>
               <div className="flex flex-col space-y-2">
+                {presetAmounts.map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setCustomAmount(amount)}
+                    disabled={amount > availableMonthlyIncome}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    ${amount.toLocaleString()}
+                  </button>
+                ))}
                 <button
-                  onClick={() => setCustomAmount(100)}
-                  disabled={100 > maxAffordableInvestment}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
-                >
-                  $100
-                </button>
-                <button
-                  onClick={() => setCustomAmount(500)}
-                  disabled={500 > maxAffordableInvestment}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
-                >
-                  $500
-                </button>
-                <button
-                  onClick={() => setCustomAmount(1000)}
-                  disabled={1000 > maxAffordableInvestment}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
-                >
-                  $1,000
-                </button>
-                <button
-                  onClick={() => setCustomAmount(maxAffordableInvestment)}
-                  disabled={maxAffordableInvestment <= 0}
+                  onClick={() => setCustomAmount(availableMonthlyIncome)}
+                  disabled={availableMonthlyIncome <= 0}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400"
                 >
                   All Available
@@ -163,7 +147,7 @@ export const InvestmentsTab = ({
             </div>
             <button
               onClick={toggleMonthlySP500}
-              disabled={customAmount <= 0 || customAmount > maxAffordableInvestment || (monthlySP500Investment === 0 && maxAffordableInvestment <= 0)}
+              disabled={customAmount <= 0 || customAmount > availableMonthlyIncome || (monthlySP500Investment === 0 && availableMonthlyIncome <= 0)}
               className={`px-6 py-3 rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed ${
                 monthlySP500Investment > 0
                   ? "bg-red-600 text-white hover:bg-red-700"
@@ -190,7 +174,7 @@ export const InvestmentsTab = ({
             </div>
           )}
 
-          {maxAffordableInvestment <= 0 && (
+          {availableMonthlyIncome <= 0 && (
             <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
               <div className="flex items-center">
                 <div className="text-red-500 text-xl mr-3">⚠️</div>
@@ -206,7 +190,7 @@ export const InvestmentsTab = ({
             </div>
           )}
 
-          {customAmount > maxAffordableInvestment && maxAffordableInvestment > 0 && (
+          {customAmount > availableMonthlyIncome && availableMonthlyIncome > 0 && (
             <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
               <div className="flex items-center">
                 <div className="text-yellow-500 text-xl mr-3">⚠️</div>
@@ -215,7 +199,7 @@ export const InvestmentsTab = ({
                     You can't afford this investment amount with your current monthly income.
                   </p>
                   <p className="text-xs text-yellow-600 mt-1">
-                    Maximum affordable: ${maxAffordableInvestment.toLocaleString()}
+                    Maximum affordable: ${availableMonthlyIncome.toLocaleString()}
                   </p>
                 </div>
               </div>

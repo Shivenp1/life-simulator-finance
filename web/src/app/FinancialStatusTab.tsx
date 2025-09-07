@@ -3,11 +3,8 @@ interface FinancialStatusTabProps {
   hasHouse: boolean;
   housePrice: number;
   downPayment: number;
-  monthlyMortgage: number;
   totalMonthlyHousingCost: number;
   currentYear: number;
-  totalSavings: number;
-  setTotalSavings: (amount: number) => void;
   monthlySP500Investment: number;
   totalSP500Value: number;
   hasCar: boolean;
@@ -16,6 +13,8 @@ interface FinancialStatusTabProps {
   hasRental: boolean;
   selectedRental: any;
   monthlyRent: number;
+  afterTaxIncome: number; // Pass from parent instead of calculating here
+  accumulatedMoney: number; // Pass from parent instead of calculating here
 }
 
 export const FinancialStatusTab = ({
@@ -23,11 +22,8 @@ export const FinancialStatusTab = ({
   hasHouse,
   housePrice,
   downPayment,
-  monthlyMortgage,
   totalMonthlyHousingCost,
   currentYear,
-  totalSavings,
-  setTotalSavings,
   monthlySP500Investment,
   totalSP500Value,
   hasCar,
@@ -35,31 +31,10 @@ export const FinancialStatusTab = ({
   totalMonthlyCarCost,
   hasRental,
   selectedRental,
-  monthlyRent
+  monthlyRent,
+  afterTaxIncome,
+  accumulatedMoney
 }: FinancialStatusTabProps) => {
-  // NJ Tax calculation (simplified)
-  const calculateAfterTaxIncome = (salary: number) => {
-    // Federal tax brackets (simplified)
-    let federalTax = 0;
-    if (salary <= 11600) federalTax = salary * 0.10;
-    else if (salary <= 47150) federalTax = 1160 + (salary - 11600) * 0.12;
-    else if (salary <= 100525) federalTax = 5428 + (salary - 47150) * 0.22;
-    else if (salary <= 191950) federalTax = 17470 + (salary - 100525) * 0.24;
-    else federalTax = 41847 + (salary - 191950) * 0.32;
-    
-    // NJ state tax (simplified)
-    let njTax = 0;
-    if (salary <= 20000) njTax = salary * 0.014;
-    else if (salary <= 35000) njTax = 280 + (salary - 20000) * 0.0175;
-    else if (salary <= 40000) njTax = 542.50 + (salary - 35000) * 0.035;
-    else if (salary <= 75000) njTax = 717.50 + (salary - 40000) * 0.05525;
-    else if (salary <= 500000) njTax = 2665.63 + (salary - 75000) * 0.0637;
-    else njTax = 30365.63 + (salary - 500000) * 0.0899;
-    
-    return salary - federalTax - njTax;
-  };
-
-  const afterTaxIncome = calculateAfterTaxIncome(currentSalary);
   const monthlyTakeHome = afterTaxIncome / 12;
 
   // Budget categories with typical amounts
@@ -76,33 +51,6 @@ export const FinancialStatusTab = ({
 
   const totalExpenses = budgetCategories.reduce((sum, category) => sum + category.amount, 0);
   const remainingIncome = monthlyTakeHome - totalExpenses;
-  const monthlySavings = Math.max(remainingIncome, 0); // Only positive savings
-  const yearlySavings = monthlySavings * 12;
-
-  // Calculate accumulated money based on years simulated
-  const calculateAccumulatedMoney = () => {
-    if (currentYear <= 1) return 0; // No money accumulated in year 1
-    
-    let accumulated = 0;
-    let currentSalaryForYear = currentSalary;
-    
-    // Calculate money accumulated for each completed year
-    for (let year = 1; year < currentYear; year++) {
-      const yearlyAfterTax = calculateAfterTaxIncome(currentSalaryForYear);
-      const monthlyTakeHomeForYear = yearlyAfterTax / 12;
-      const monthlyNetForYear = monthlyTakeHomeForYear - totalExpenses;
-      const yearlyNetForYear = Math.max(monthlyNetForYear * 12, 0);
-      
-      accumulated += yearlyNetForYear;
-      
-      // Apply salary growth for next year
-      currentSalaryForYear = currentSalaryForYear * 1.05; // 5% growth
-    }
-    
-    return accumulated;
-  };
-
-  const accumulatedMoney = calculateAccumulatedMoney();
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

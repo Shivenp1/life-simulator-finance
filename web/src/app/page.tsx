@@ -81,6 +81,28 @@ export default function Page() {
     }
   };
 
+  const handleEndLease = () => {
+    const securityDepositRefund = monthlyRent * 1.5;
+    setHasRental(false);
+    setSelectedRental(null);
+    setMonthlyRent(0);
+    // Add security deposit back to bank balance
+    setTotalSavings(prev => prev + securityDepositRefund);
+  };
+  
+  const handleUpgradeApartment = (newRental: any) => {
+    const currentSecurityDeposit = monthlyRent * 1.5;
+    const newSecurityDeposit = newRental.monthlyRent * 1.5;
+    const additionalDeposit = newSecurityDeposit - currentSecurityDeposit;
+    
+    if (accumulatedMoney >= additionalDeposit) {
+      setSelectedRental(newRental);
+      setMonthlyRent(newRental.monthlyRent);
+      // Subtract additional deposit from bank balance
+      setTotalSavings(prev => prev - additionalDeposit);
+    }
+  };
+
   const goToPurchases = () => {
     setActiveTab("Purchases");
   };
@@ -108,11 +130,8 @@ export default function Page() {
     setMonthlyRent(0);
   };
 
-  const downPayment = housePrice * 0.10;
-  const monthlyMortgage = (housePrice - downPayment) * 0.065 / 12; // 6.5% rate, 30 years
-
   // Calculate total monthly housing cost only if housePrice > 0
-  const loanAmount = housePrice - downPayment;
+  const loanAmount = housePrice - (housePrice * 0.10);
   const monthlyMortgagePayment = loanAmount * 0.065 / 12;
   const annualPropertyTaxes = housePrice * 0.015;
   const monthlyPropertyTaxes = annualPropertyTaxes / 12;
@@ -158,6 +177,7 @@ export default function Page() {
   
   const monthlyExpenses = 200 + 300 + 200 + 500 + 300; // Utilities + Groceries + Entertainment + Savings + Other
   const totalExpenses = monthlyExpenses + totalMonthlyHousingCost + totalMonthlyCarCost + monthlySP500Investment + (hasRental ? monthlyRent : 0);
+  const availableMonthlyIncome = monthlyTakeHome - totalExpenses;
 
   // Calculate accumulated money based on years simulated
   const calculateAccumulatedMoney = () => {
@@ -311,23 +331,26 @@ export default function Page() {
             selectedRental={selectedRental}
             monthlyRent={monthlyRent}
             onRentApartment={handleRentApartment}
+            onEndLease={handleEndLease}
+            onUpgradeApartment={handleUpgradeApartment}
             accumulatedMoney={accumulatedMoney}
+            downPayment={housePrice * 0.10}
+            totalMonthlyHousingCost={totalMonthlyHousingCost}
+            totalMonthlyCarCost={totalMonthlyCarCost}
           />
         )}
 
         {/* Investments Tab */}
         {activeTab === "Investments" && (
           <InvestmentsTab
-            bankBalance={accumulatedMoney}
-            setBankBalance={(amount) => setTotalSavings(amount)}
             currentYear={currentYear}
             currentAge={currentAge}
             monthlySP500Investment={monthlySP500Investment}
             setMonthlySP500Investment={setMonthlySP500Investment}
             totalSP500Value={totalSP500Value}
-            setTotalSP500Value={setTotalSP500Value}
             monthlyTakeHome={monthlyTakeHome}
             monthlyExpenses={totalExpenses}
+            availableMonthlyIncome={availableMonthlyIncome}
           />
         )}
 
@@ -337,12 +360,9 @@ export default function Page() {
             currentSalary={currentSalary}
             hasHouse={hasHouse}
             housePrice={housePrice}
-            downPayment={downPayment}
-            monthlyMortgage={monthlyMortgage}
+            downPayment={housePrice * 0.10}
             totalMonthlyHousingCost={totalMonthlyHousingCost}
             currentYear={currentYear}
-            totalSavings={totalSavings}
-            setTotalSavings={setTotalSavings}
             monthlySP500Investment={monthlySP500Investment}
             totalSP500Value={totalSP500Value}
             hasCar={hasCar}
@@ -351,6 +371,8 @@ export default function Page() {
             hasRental={hasRental}
             selectedRental={selectedRental}
             monthlyRent={monthlyRent}
+            afterTaxIncome={afterTaxIncome}
+            accumulatedMoney={accumulatedMoney}
           />
         )}
       </div>

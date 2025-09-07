@@ -18,10 +18,10 @@ interface PurchasesTabProps {
   onEndLease: () => void;
   onUpgradeApartment: (rental: any) => void;
   accumulatedMoney: number;
-  // Pass calculated values from parent instead of calculating here
   downPayment: number;
   totalMonthlyHousingCost: number;
   totalMonthlyCarCost: number;
+  gameMode: 'game' | 'serious';
 }
 
 export const PurchasesTab = ({
@@ -44,14 +44,12 @@ export const PurchasesTab = ({
   accumulatedMoney,
   downPayment,
   totalMonthlyHousingCost,
-  totalMonthlyCarCost
+  totalMonthlyCarCost,
+  gameMode
 }: PurchasesTabProps) => {
-  const [downPaymentPercent, setDownPaymentPercent] = useState(10);
-  const [selectedApartment, setSelectedApartment] = useState<any>(null);
-  const [showApartmentDetails, setShowApartmentDetails] = useState(false);
-  const [showUpgradeOptions, setShowUpgradeOptions] = useState(false);
+  const [showApartmentDetails, setShowApartmentDetails] = useState<any>(null);
 
-  // Apartment data - could be moved to separate file
+  // Apartment data with realistic pricing
   const apartments = [
     {
       id: 1,
@@ -73,7 +71,7 @@ export const PurchasesTab = ({
       monthlyRent: 1800,
       location: "Midtown",
       amenities: ["Gym", "Pool", "Laundry", "Parking"],
-      description: "Spacious 1BR with modern amenities"
+      description: "Spacious 1-bedroom with modern amenities"
     },
     {
       id: 3,
@@ -84,7 +82,7 @@ export const PurchasesTab = ({
       monthlyRent: 2800,
       location: "Uptown",
       amenities: ["Gym", "Pool", "Laundry", "Parking", "Balcony"],
-      description: "Luxury 2BR with premium features"
+      description: "Perfect for roommates or growing families"
     },
     {
       id: 4,
@@ -95,7 +93,7 @@ export const PurchasesTab = ({
       monthlyRent: 3800,
       location: "Suburbs",
       amenities: ["Gym", "Pool", "Laundry", "Parking", "Balcony", "Storage"],
-      description: "Family-friendly 3BR with extra space"
+      description: "Large family-friendly apartment"
     },
     {
       id: 5,
@@ -105,8 +103,8 @@ export const PurchasesTab = ({
       sqft: 1200,
       monthlyRent: 4500,
       location: "Downtown",
-      amenities: ["Gym", "Pool", "Laundry", "Valet Parking", "Rooftop Access", "Concierge"],
-      description: "Premium penthouse with city views"
+      amenities: ["Gym", "Pool", "Concierge", "Parking", "City View", "Rooftop"],
+      description: "Premium penthouse with stunning city views"
     },
     {
       id: 6,
@@ -117,235 +115,181 @@ export const PurchasesTab = ({
       monthlyRent: 900,
       location: "Outskirts",
       amenities: ["Laundry"],
-      description: "Affordable studio for budget-conscious renters"
+      description: "Affordable option for budget-conscious renters"
     }
   ];
 
-  // Filter apartments to show only upgrades (higher rent) or all if no current rental
-  const availableApartments = hasRental 
-    ? apartments.filter(apt => apt.monthlyRent > monthlyRent)
-    : apartments;
-
-  const handleUpgradeApartment = (newApartment: any) => {
-    onUpgradeApartment(newApartment);
-    setShowUpgradeOptions(false);
-  };
-
-  // Reusable component for purchase sections
-  const PurchaseSection = ({ 
-    title, 
-    emoji, 
-    hasItem, 
-    price, 
-    setPrice, 
-    onBuy, 
-    placeholder, 
-    buttonText, 
-    buttonEmoji,
-    showPriceInput = true,
-    showDownPaymentInput = false,
-    downPaymentPercent,
-    setDownPaymentPercent,
-    downPayment,
-    totalMonthlyCost,
-    itemName
-  }: any) => (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {emoji} {title}
-      </h3>
-      
-      {!hasItem ? (
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            You're {currentAge} years old with a salary of ${currentSalary.toLocaleString()}. 
-            Would you like to buy a {itemName}?
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {showPriceInput && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {itemName} Price ($)
-                </label>
-                <input
-                  type="number"
-                  value={price === 0 ? '' : price}
-                  onChange={(e) => setPrice(Number(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 font-medium"
-                  placeholder={placeholder}
-                />
-              </div>
-            )}
-            
-            {showDownPaymentInput && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Down Payment (%)
-                </label>
-                <input
-                  type="number"
-                  value={downPaymentPercent}
-                  onChange={(e) => setDownPaymentPercent(Number(e.target.value) || 0)}
-                  min="3"
-                  max="50"
-                  step="0.5"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 font-medium"
-                />
-              </div>
-            )}
-          </div>
-          
-          {price > 0 && (
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-3">Monthly Cost Breakdown:</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-800 font-medium">Total Monthly Cost:</span>
-                  <span className="font-bold text-gray-900">${totalMonthlyCost.toLocaleString()}</span>
-                </div>
-                {showDownPaymentInput && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
-                    <p className="text-sm text-blue-900 font-medium">
-                      <strong>Down Payment ({downPaymentPercent}%):</strong> ${downPayment.toLocaleString()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <button
-            onClick={onBuy}
-            disabled={price === 0}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {buttonEmoji} {buttonText}
-          </button>
-        </div>
-      ) : (
-        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <h4 className="font-medium text-green-800 mb-2">✅ {itemName} Purchased!</h4>
-          <div className="text-sm text-green-700 space-y-1">
-            <p><strong>{itemName} Value:</strong> ${price.toLocaleString()}</p>
-            {showDownPaymentInput && (
-              <p><strong>Down Payment ({downPaymentPercent}%):</strong> ${downPayment.toLocaleString()}</p>
-            )}
-            <div className="mt-3 p-3 bg-white rounded border">
-              <h5 className="font-medium text-gray-800 mb-2">Monthly Cost Breakdown:</h5>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span>Total Monthly Cost:</span>
-                  <span>${totalMonthlyCost.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* House Purchase Section */}
-      <PurchaseSection
-        title="House Purchase"
-        emoji=""
-        hasItem={hasHouse}
-        price={housePrice}
-        setPrice={setHousePrice}
-        onBuy={onBuyHouse}
-        placeholder="350000"
-        buttonText="Buy This House!"
-        buttonEmoji=""
-        showPriceInput={true}
-        showDownPaymentInput={true}
-        downPaymentPercent={downPaymentPercent}
-        setDownPaymentPercent={setDownPaymentPercent}
-        downPayment={downPayment}
-        totalMonthlyCost={totalMonthlyHousingCost}
-        itemName="House"
-      />
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-green-900' : 'text-gray-800'}`}>
+          🏠 House Purchase
+        </h3>
+        
+        {!hasHouse ? (
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              You're {currentAge} years old with a salary of ${currentSalary.toLocaleString()}. 
+              {gameMode === 'game' ? ' Time to buy your dream home! 🏡' : ' Consider purchasing a house for long-term wealth building.'}
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  House Price ($)
+                </label>
+                <input
+                  type="number"
+                  value={housePrice || ''}
+                  onChange={(e) => setHousePrice(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="300000"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Down Payment (10%):</span> ${downPayment.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Monthly Payment:</span> ${totalMonthlyHousingCost.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Available Money:</span> ${accumulatedMoney.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={onBuyHouse}
+              disabled={accumulatedMoney < downPayment}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                accumulatedMoney >= downPayment
+                  ? gameMode === 'game' 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {accumulatedMoney >= downPayment ? 'Buy House' : 'Insufficient Funds'}
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <h4 className="font-semibold text-green-800 mb-2">✅ House Owned!</h4>
+            <p className="text-green-700">
+              You own a house worth ${housePrice.toLocaleString()} with a monthly payment of ${totalMonthlyHousingCost.toLocaleString()}.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Car Purchase Section */}
-      <PurchaseSection
-        title="Car Purchase"
-        emoji=""
-        hasItem={hasCar}
-        price={carPrice}
-        setPrice={setCarPrice}
-        onBuy={onBuyCar}
-        placeholder="25000"
-        buttonText="Buy This Car!"
-        buttonEmoji=""
-        showPriceInput={true}
-        showDownPaymentInput={false}
-        totalMonthlyCost={totalMonthlyCarCost}
-        itemName="Car"
-      />
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-blue-900' : 'text-gray-800'}`}>
+          🚗 Car Purchase
+        </h3>
+        
+        {!hasCar ? (
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              {gameMode === 'game' ? 'Ready to hit the road? 🚗💨' : 'Consider purchasing a car for transportation.'}
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Car Price ($)
+                </label>
+                <input
+                  type="number"
+                  value={carPrice || ''}
+                  onChange={(e) => setCarPrice(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="25000"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Down Payment (20%):</span> ${(carPrice * 0.20).toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Monthly Payment:</span> ${totalMonthlyCarCost.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Available Money:</span> ${accumulatedMoney.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={onBuyCar}
+              disabled={accumulatedMoney < (carPrice * 0.20)}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                accumulatedMoney >= (carPrice * 0.20)
+                  ? gameMode === 'game' 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {accumulatedMoney >= (carPrice * 0.20) ? 'Buy Car' : 'Insufficient Funds'}
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">✅ Car Owned!</h4>
+            <p className="text-blue-700">
+              You own a car worth ${carPrice.toLocaleString()} with a monthly payment of ${totalMonthlyCarCost.toLocaleString()}.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Rental Properties Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-           Rental Properties
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-purple-900' : 'text-gray-800'}`}>
+          �� Rental Properties
         </h3>
         
         {!hasRental ? (
           <div className="space-y-4">
             <p className="text-gray-600">
               You're {currentAge} years old with a salary of ${currentSalary.toLocaleString()}. 
-              Browse available apartments and find your perfect rental!
+              {gameMode === 'game' ? ' Browse available apartments and find your perfect rental! 🏠✨' : ' Browse available apartments and find your perfect rental.'}
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {apartments.map((apartment) => (
-                <div key={apartment.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-gray-800">{apartment.name}</h4>
-                    <span className="text-lg font-bold text-green-600">${apartment.monthlyRent.toLocaleString()}/mo</span>
+                <div key={apartment.id} className={`p-4 rounded-lg border-2 ${gameMode === 'game' ? 'bg-white border-purple-200 hover:border-purple-400' : 'bg-gray-50 border-gray-200 hover:border-gray-400'} transition-colors`}>
+                  <h4 className="font-semibold text-gray-800 mb-2">{apartment.name}</h4>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>📍 {apartment.location}</p>
+                    <p>🛏️ {apartment.bedrooms} bed • 🚿 {apartment.bathrooms} bath</p>
+                    <p>📐 {apartment.sqft} sq ft</p>
+                    <p className="font-semibold text-green-600">${apartment.monthlyRent.toLocaleString()}/month</p>
                   </div>
-                  
-                  <div className="text-sm text-gray-600 mb-3">
-                    <p>{apartment.bedrooms === 0 ? 'Studio' : `${apartment.bedrooms} BR`} • {apartment.bathrooms} BA • {apartment.sqft} sqft</p>
-                    <p className="text-blue-600">📍 {apartment.location}</p>
-                  </div>
-                  
-                  <p className="text-sm text-gray-700 mb-3">{apartment.description}</p>
-                  
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {apartment.amenities.slice(0, 3).map((amenity, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                        {amenity}
-                      </span>
-                    ))}
-                    {apartment.amenities.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                        +{apartment.amenities.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
+                  <div className="mt-3 flex space-x-2">
                     <button
-                      onClick={() => {
-                        setSelectedApartment(apartment);
-                        setShowApartmentDetails(true);
-                      }}
-                      className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                      onClick={() => setShowApartmentDetails(apartment)}
+                      className="flex-1 px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
                     >
                       View Details
                     </button>
-                    
                     <button
                       onClick={() => onRentApartment(apartment)}
-                      disabled={accumulatedMoney < apartment.monthlyRent * 1.5}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      disabled={accumulatedMoney < (apartment.monthlyRent * 1.5)}
+                      className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                        accumulatedMoney >= (apartment.monthlyRent * 1.5)
+                          ? gameMode === 'game' 
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
                     >
-                      {accumulatedMoney < apartment.monthlyRent * 1.5 
-                        ? `Need $${(apartment.monthlyRent * 1.5).toLocaleString()} for deposit`
-                        : 'Rent This Apartment'
-                      }
+                      Rent
                     </button>
                   </div>
                 </div>
@@ -354,108 +298,65 @@ export const PurchasesTab = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Current Apartment Display */}
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex justify-between items-start mb-3">
-                <h4 className="font-medium text-green-800 text-lg">✅ Current Apartment</h4>
-                <span className="text-xl font-bold text-green-600">${monthlyRent.toLocaleString()}/mo</span>
-              </div>
-              
-              <div className="text-sm text-green-700 space-y-2">
-                <p><strong>Apartment:</strong> {selectedRental?.name}</p>
-                <p><strong>Location:</strong> {selectedRental?.location}</p>
-                <p><strong>Size:</strong> {selectedRental?.bedrooms === 0 ? 'Studio' : `${selectedRental?.bedrooms} BR`} • {selectedRental?.bathrooms} BA • {selectedRental?.sqft} sqft</p>
-                <p><strong>Security Deposit:</strong> ${(monthlyRent * 1.5).toLocaleString()}</p>
-                
-                <div className="mt-3 p-3 bg-white rounded border">
-                  <h5 className="font-medium text-gray-800 mb-2">Monthly Cost Breakdown:</h5>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span>Rent:</span>
-                      <span>${monthlyRent.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Utilities (estimated):</span>
-                      <span>${Math.round(monthlyRent * 0.1).toLocaleString()}</span>
-                    </div>
-                    <hr className="my-1" />
-                    <div className="flex justify-between font-bold">
-                      <span>Total Monthly Cost:</span>
-                      <span className="text-red-600">${(monthlyRent + Math.round(monthlyRent * 0.1)).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
+              <h4 className="font-semibold text-green-800 mb-2">✅ Currently Renting!</h4>
+              <div className="space-y-1 text-green-700">
+                <p><span className="font-medium">Apartment:</span> {selectedRental?.name}</p>
+                <p><span className="font-medium">Location:</span> {selectedRental?.location}</p>
+                <p><span className="font-medium">Monthly Rent:</span> ${monthlyRent.toLocaleString()}</p>
+                <p><span className="font-medium">Security Deposit:</span> ${(monthlyRent * 1.5).toLocaleString()}</p>
               </div>
             </div>
-
-            {/* Apartment Management Buttons */}
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowUpgradeOptions(true)}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                 Upgrade Apartment
-              </button>
+            
+            <div className="flex space-x-4">
               <button
                 onClick={onEndLease}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                🚪 End Lease
+                End Lease
+              </button>
+              <button
+                onClick={() => setShowApartmentDetails(null)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Browse Other Apartments
               </button>
             </div>
-
-            {/* Upgrade Options */}
-            {showUpgradeOptions && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex justify-between items-center mb-3">
-                  <h5 className="font-medium text-blue-800">Available Upgrades</h5>
-                  <button
-                    onClick={() => setShowUpgradeOptions(false)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                {availableApartments.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-3">
-                    {availableApartments.map((apartment) => {
-                      const additionalDeposit = (apartment.monthlyRent * 1.5) - (monthlyRent * 1.5);
-                      return (
-                        <div key={apartment.id} className="border border-blue-200 rounded-lg p-3 bg-white">
-                          <div className="flex justify-between items-start mb-2">
-                            <h6 className="font-semibold text-gray-800">{apartment.name}</h6>
-                            <span className="text-lg font-bold text-green-600">${apartment.monthlyRent.toLocaleString()}/mo</span>
-                          </div>
-                          
-                          <div className="text-sm text-gray-600 mb-2">
-                            <p>{apartment.bedrooms === 0 ? 'Studio' : `${apartment.bedrooms} BR`} • {apartment.bathrooms} BA • {apartment.sqft} sqft</p>
-                            <p className="text-blue-600">📍 {apartment.location}</p>
-                          </div>
-                          
-                          <div className="flex justify-between items-center">
-                            <div className="text-sm">
-                              <p className="text-gray-600">Additional deposit needed:</p>
-                              <p className="font-medium text-orange-600">${additionalDeposit.toLocaleString()}</p>
-                            </div>
-                            <button
-                              onClick={() => handleUpgradeApartment(apartment)}
-                              disabled={accumulatedMoney < additionalDeposit}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                            >
-                              {accumulatedMoney < additionalDeposit 
-                                ? 'Need More Money'
-                                : 'Upgrade'
-                              }
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+            
+            {showApartmentDetails === null && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {apartments.filter(apt => apt.id !== selectedRental?.id).map((apartment) => (
+                  <div key={apartment.id} className={`p-4 rounded-lg border-2 ${gameMode === 'game' ? 'bg-white border-purple-200 hover:border-purple-400' : 'bg-gray-50 border-gray-200 hover:border-gray-400'} transition-colors`}>
+                    <h4 className="font-semibold text-gray-800 mb-2">{apartment.name}</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p>📍 {apartment.location}</p>
+                      <p>🛏️ {apartment.bedrooms} bed • 🚿 {apartment.bathrooms} bath</p>
+                      <p>📐 {apartment.sqft} sq ft</p>
+                      <p className="font-semibold text-green-600">${apartment.monthlyRent.toLocaleString()}/month</p>
+                    </div>
+                    <div className="mt-3 flex space-x-2">
+                      <button
+                        onClick={() => setShowApartmentDetails(apartment)}
+                        className="flex-1 px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => onUpgradeApartment(apartment)}
+                        disabled={accumulatedMoney < ((apartment.monthlyRent - monthlyRent) * 1.5)}
+                        className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                          accumulatedMoney >= ((apartment.monthlyRent - monthlyRent) * 1.5)
+                            ? gameMode === 'game' 
+                              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        Upgrade
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-blue-700 text-sm">No upgrade options available. You're already in the most expensive apartment!</p>
-                )}
+                ))}
               </div>
             )}
           </div>
@@ -463,92 +364,98 @@ export const PurchasesTab = ({
       </div>
 
       {/* Apartment Details Modal */}
-      {showApartmentDetails && selectedApartment && (
+      {showApartmentDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">{selectedApartment.name}</h3>
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">{showApartmentDetails.name}</h3>
               <button
-                onClick={() => setShowApartmentDetails(false)}
-                className="text-gray-500 hover:text-gray-700"
+                onClick={() => setShowApartmentDetails(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
               >
-                ✕
+                ×
               </button>
             </div>
             
             <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">
-                  ${selectedApartment.monthlyRent.toLocaleString()}/month
-                </div>
-                <div className="text-sm text-gray-600">
-                  Security Deposit: ${(selectedApartment.monthlyRent * 1.5).toLocaleString()}
-                </div>
-              </div>
-              
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">Bedrooms:</span> {selectedApartment.bedrooms === 0 ? 'Studio' : selectedApartment.bedrooms}
+                  <span className="font-medium text-gray-600">Location:</span>
+                  <p className="text-gray-900">📍 {showApartmentDetails.location}</p>
                 </div>
                 <div>
-                  <span className="font-medium">Bathrooms:</span> {selectedApartment.bathrooms}
+                  <span className="font-medium text-gray-600">Size:</span>
+                  <p className="text-gray-900">📐 {showApartmentDetails.sqft} sq ft</p>
                 </div>
                 <div>
-                  <span className="font-medium">Square Feet:</span> {selectedApartment.sqft}
+                  <span className="font-medium text-gray-600">Bedrooms:</span>
+                  <p className="text-gray-900">🛏️ {showApartmentDetails.bedrooms}</p>
                 </div>
                 <div>
-                  <span className="font-medium">Location:</span> {selectedApartment.location}
+                  <span className="font-medium text-gray-600">Bathrooms:</span>
+                  <p className="text-gray-900">🚿 {showApartmentDetails.bathrooms}</p>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Description</h4>
-                <p className="text-sm text-gray-600">{selectedApartment.description}</p>
+                <span className="font-medium text-gray-600">Monthly Rent:</span>
+                <p className="text-2xl font-bold text-green-600">${showApartmentDetails.monthlyRent.toLocaleString()}</p>
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Amenities</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedApartment.amenities.map((amenity: string, index: number) => (
-                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+                <span className="font-medium text-gray-600">Security Deposit:</span>
+                <p className="text-lg font-semibold text-blue-600">${(showApartmentDetails.monthlyRent * 1.5).toLocaleString()}</p>
+              </div>
+              
+              <div>
+                <span className="font-medium text-gray-600">Amenities:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {showApartmentDetails.amenities.map((amenity: string, index: number) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                       {amenity}
                     </span>
                   ))}
                 </div>
               </div>
               
+              <div>
+                <span className="font-medium text-gray-600">Description:</span>
+                <p className="text-gray-700 mt-1">{showApartmentDetails.description}</p>
+              </div>
+              
               <div className="flex space-x-3 pt-4">
                 <button
-                  onClick={() => setShowApartmentDetails(false)}
-                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  onClick={() => {
+                    if (!hasRental) {
+                      onRentApartment(showApartmentDetails);
+                    } else {
+                      onUpgradeApartment(showApartmentDetails);
+                    }
+                    setShowApartmentDetails(null);
+                  }}
+                  disabled={!hasRental ? accumulatedMoney < (showApartmentDetails.monthlyRent * 1.5) : accumulatedMoney < ((showApartmentDetails.monthlyRent - monthlyRent) * 1.5)}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                    (!hasRental && accumulatedMoney >= (showApartmentDetails.monthlyRent * 1.5)) || 
+                    (hasRental && accumulatedMoney >= ((showApartmentDetails.monthlyRent - monthlyRent) * 1.5))
+                      ? gameMode === 'game' 
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
-                  Close
+                  {!hasRental ? 'Rent This Apartment' : 'Upgrade to This Apartment'}
                 </button>
                 <button
-                  onClick={() => {
-                    onRentApartment(selectedApartment);
-                    setShowApartmentDetails(false);
-                  }}
-                  disabled={accumulatedMoney < selectedApartment.monthlyRent * 1.5}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowApartmentDetails(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
                 >
-                  Rent This Apartment
+                  Close
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Future Purchase Options */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          🎓 Future Purchases
-        </h3>
-        <p className="text-gray-500 text-sm">
-          More purchase options coming soon! (Education, investments, etc.)
-        </p>
-      </div>
     </div>
   );
 };

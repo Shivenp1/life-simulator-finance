@@ -13,8 +13,9 @@ interface FinancialStatusTabProps {
   hasRental: boolean;
   selectedRental: any;
   monthlyRent: number;
-  afterTaxIncome: number; // Pass from parent instead of calculating here
-  accumulatedMoney: number; // Pass from parent instead of calculating here
+  afterTaxIncome: number;
+  accumulatedMoney: number;
+  gameMode: 'game' | 'serious';
 }
 
 export const FinancialStatusTab = ({
@@ -33,14 +34,15 @@ export const FinancialStatusTab = ({
   selectedRental,
   monthlyRent,
   afterTaxIncome,
-  accumulatedMoney
+  accumulatedMoney,
+  gameMode
 }: FinancialStatusTabProps) => {
   const monthlyTakeHome = afterTaxIncome / 12;
-
+  
   // Budget categories with typical amounts
   const budgetCategories = [
     { name: "Housing", amount: hasHouse ? totalMonthlyHousingCost : 0, color: "bg-red-100 text-red-800" },
-    { name: "Rent", amount: hasRental ? monthlyRent : 0, color: "bg-pink-100 text-pink-800" },
+    { name: "Rental", amount: hasRental ? monthlyRent : 0, color: "bg-purple-100 text-purple-800" },
     { name: "Car", amount: hasCar ? totalMonthlyCarCost : 0, color: "bg-blue-100 text-blue-800" },
     { name: "S&P 500 Investment", amount: monthlySP500Investment, color: "bg-indigo-100 text-indigo-800" },
     { name: "Utilities", amount: 200, color: "bg-orange-100 text-orange-800" },
@@ -49,193 +51,283 @@ export const FinancialStatusTab = ({
     { name: "Other", amount: 300, color: "bg-gray-100 text-gray-800" }
   ];
 
-  const totalExpenses = budgetCategories.reduce((sum, category) => sum + category.amount, 0);
-  const remainingIncome = monthlyTakeHome - totalExpenses;
+  const totalMonthlyExpenses = budgetCategories.reduce((sum, category) => sum + category.amount, 0);
+  const monthlyNetIncome = monthlyTakeHome - totalMonthlyExpenses;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Financial Overview */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          💰 Financial Breakdown
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-green-900' : 'text-gray-800'}`}>
+          �� Financial Overview
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-700">Income</h4>
-            <div className="space-y-2 text-sm">
-              <p><span className="text-gray-600">Gross Salary:</span> <span className="font-medium text-green-600">${currentSalary.toLocaleString()}</span></p>
-              <p><span className="text-gray-600">After Tax:</span> <span className="font-medium text-green-600">${afterTaxIncome.toLocaleString()}</span></p>
-              <p><span className="text-gray-600">Monthly Take Home:</span> <span className="font-medium text-green-600">${monthlyTakeHome.toLocaleString()}</span></p>
-            </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`p-4 rounded-lg ${gameMode === 'game' ? 'bg-white border-2 border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <h4 className="font-semibold text-gray-800 mb-2">Annual Salary</h4>
+            <p className="text-xl font-bold text-green-600">${currentSalary.toLocaleString()}</p>
           </div>
           
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-700">Assets & Liabilities</h4>
-            <div className="space-y-2 text-sm">
-              {hasHouse ? (
-                <>
-                  <p><span className="text-gray-600">House Value:</span> <span className="font-medium text-blue-600">${housePrice.toLocaleString()}</span></p>
-                  <p><span className="text-gray-600">Down Payment:</span> <span className="font-medium text-green-600">${downPayment.toLocaleString()}</span></p>
-                  <p><span className="text-gray-600">Total Monthly Housing:</span> <span className="font-medium text-red-600">${(totalMonthlyHousingCost || 0).toLocaleString()}</span></p>
-                </>
-              ) : (
-                <p className="text-gray-500">No house purchased yet</p> 
-              )}
-              {hasCar && (
-                <>
-                  <p><span className="text-gray-600">Car Value:</span> <span className="font-medium text-blue-600">${carPrice.toLocaleString()}</span></p>
-                  <p><span className="text-gray-600">Total Monthly Car Cost:</span> <span className="font-medium text-red-600">${totalMonthlyCarCost.toLocaleString()}</span></p>
-                </>
-              )}
-              {hasRental && (
-                <>
-                  <p><span className="text-gray-600">Rental:</span> <span className="font-medium text-pink-600">{selectedRental?.name}</span></p>
-                  <p><span className="text-gray-600">Monthly Rent:</span> <span className="font-medium text-red-600">${monthlyRent.toLocaleString()}</span></p>
-                  <p><span className="text-gray-600">Security Deposit:</span> <span className="font-medium text-orange-600">${(monthlyRent * 1.5).toLocaleString()}</span></p>
-                </>
-              )}
-              {monthlySP500Investment > 0 && (
-                <p><span className="text-gray-600">S&P 500 Portfolio:</span> <span className="font-medium text-indigo-600">${totalSP500Value.toLocaleString()}</span></p>
-              )}
-            </div>
+          <div className={`p-4 rounded-lg ${gameMode === 'game' ? 'bg-white border-2 border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <h4 className="font-semibold text-gray-800 mb-2">After Tax Income</h4>
+            <p className="text-xl font-bold text-blue-600">${afterTaxIncome.toLocaleString()}</p>
+          </div>
+          
+          <div className={`p-4 rounded-lg ${gameMode === 'game' ? 'bg-white border-2 border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <h4 className="font-semibold text-gray-800 mb-2">Monthly Take Home</h4>
+            <p className="text-xl font-bold text-indigo-600">${monthlyTakeHome.toLocaleString()}</p>
+          </div>
+          
+          <div className={`p-4 rounded-lg ${gameMode === 'game' ? 'bg-white border-2 border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <h4 className="font-semibold text-gray-800 mb-2">Money in Bank</h4>
+            <p className="text-xl font-bold text-purple-600">${accumulatedMoney.toLocaleString()}</p>
           </div>
         </div>
       </div>
 
-      {/* Money in Bank Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          🏦 Money in Bank
+      {/* Monthly Budget Breakdown */}
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-blue-900' : 'text-gray-800'}`}>
+          📊 Monthly Budget Breakdown
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-              <h4 className="font-medium text-blue-800 mb-2">Current Bank Balance</h4>
-              <div className="text-3xl font-bold text-blue-600">
-                ${accumulatedMoney.toLocaleString()}
-              </div>
-              <p className="text-sm text-blue-700 mt-1">
-                Money accumulated over {currentYear - 1} year{currentYear - 1 !== 1 ? 's' : ''}
-              </p>
-            </div>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current Monthly Income:</span>
-                <span className="font-medium text-green-600">${monthlyTakeHome.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current Monthly Expenses:</span>
-                <span className="font-medium text-red-600">${totalExpenses.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current Monthly Net:</span>
-                <span className={`font-medium ${remainingIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${remainingIncome.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-2">Year Progress</h4>
-              <p className="text-sm text-green-700 mb-3">
-                You've completed {currentYear - 1} year{currentYear - 1 !== 1 ? 's' : ''} of simulation
-              </p>
-              <div className="text-lg font-bold text-green-600">
-                ${accumulatedMoney.toLocaleString()} accumulated
-              </div>
-            </div>
-            
-            <div className="text-sm text-gray-600">
-              <p><strong>Current Year:</strong> {currentYear}</p>
-              <p>Bank balance automatically updates based on years simulated</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Budgeter */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          📊 Monthly Budgeter
-        </h3>
-        
-        {/* Budget Summary */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-lg font-medium text-gray-700">Monthly Take Home:</span>
-            <span className="text-xl font-bold text-green-600">${monthlyTakeHome.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-lg font-medium text-gray-700">Total Expenses:</span>
-            <span className="text-xl font-bold text-red-600">${totalExpenses.toLocaleString()}</span>
-          </div>
-          <hr className="my-2" />
-          <div className="flex justify-between items-center">
-            <span className="text-xl font-bold text-gray-800">Remaining Income:</span>
-            <span className={`text-2xl font-bold ${remainingIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${remainingIncome.toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        {/* Budget Categories */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-gray-700 mb-3">Expense Breakdown</h4>
+        <div className="space-y-4">
           {budgetCategories.map((category, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+            <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${category.color}`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${category.color}`}>
                   {category.name}
-                </div>
-                <span className="text-sm text-gray-600">
-                  {category.amount > 0 ? `$${category.amount.toLocaleString()}` : 'Not applicable'}
                 </span>
+                {category.amount > 0 && (
+                  <span className="text-gray-600">
+                    {category.name === "Housing" && hasHouse && `🏠 House (${housePrice.toLocaleString()})`}
+                    {category.name === "Rental" && hasRental && `�� ${selectedRental?.name}`}
+                    {category.name === "Car" && hasCar && `�� Car (${carPrice.toLocaleString()})`}
+                    {category.name === "S&P 500 Investment" && monthlySP500Investment > 0 && "📈 Investment"}
+                    {category.name === "Utilities" && "⚡ Utilities"}
+                    {category.name === "Groceries" && "🛒 Groceries"}
+                    {category.name === "Entertainment" && "🎬 Entertainment"}
+                    {category.name === "Other" && "📦 Other Expenses"}
+                  </span>
+                )}
               </div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">
-                  {category.amount > 0 ? `${((category.amount / monthlyTakeHome) * 100).toFixed(1)}%` : '0%'}
-                </div>
-                <div className="w-20 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full" 
-                    style={{ width: `${Math.min((category.amount / monthlyTakeHome) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
+              <span className="font-semibold text-gray-900">
+                ${category.amount.toLocaleString()}
+              </span>
             </div>
           ))}
+          
+          <div className="border-t-2 border-gray-300 pt-4">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <span className="font-semibold text-gray-800">Total Monthly Expenses</span>
+              <span className="font-bold text-gray-900">${totalMonthlyExpenses.toLocaleString()}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-white rounded-lg border-2 border-gray-300 mt-2">
+              <span className="font-semibold text-gray-800">Monthly Net Income</span>
+              <span className={`font-bold text-lg ${monthlyNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${monthlyNetIncome.toLocaleString()}
+              </span>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Budget Health Indicator */}
-        <div className="mt-6 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              {remainingIncome >= 0 ? (
-                <div className="text-green-500 text-xl">✅</div>
-              ) : (
-                <div className="text-red-500 text-xl">⚠️</div>
+      {/* Assets & Liabilities */}
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-purple-900' : 'text-gray-800'}`}>
+          🏦 Assets & Liabilities
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Assets */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-green-800 text-lg">Assets</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <span className="text-gray-700">Money in Bank</span>
+                <span className="font-semibold text-green-600">${accumulatedMoney.toLocaleString()}</span>
+              </div>
+              
+              {hasHouse && (
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-gray-700">House Value</span>
+                  <span className="font-semibold text-green-600">${housePrice.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {hasCar && (
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-gray-700">Car Value</span>
+                  <span className="font-semibold text-green-600">${carPrice.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {monthlySP500Investment > 0 && (
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-gray-700">S&P 500 Portfolio</span>
+                  <span className="font-semibold text-green-600">${totalSP500Value.toLocaleString()}</span>
+                </div>
               )}
             </div>
-            <div className="ml-3">
-              <p className={`text-sm font-medium ${remainingIncome >= 0 ? 'text-green-800' : 'text-red-800'}`}>
-                {remainingIncome >= 0 
-                  ? `Great! You have $${remainingIncome.toLocaleString()} left over each month.`
-                  : `Warning! You're spending $${Math.abs(remainingIncome).toLocaleString()} more than you earn monthly.`
-                }
-              </p>
-              {remainingIncome >= 0 && (
-                <p className="text-xs text-green-600 mt-1">
-                  Consider increasing your savings or investing the extra money.
-                </p>
+          </div>
+
+          {/* Liabilities */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-red-800 text-lg">Monthly Expenses</h4>
+            <div className="space-y-3">
+              {hasHouse && (
+                <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                  <span className="text-gray-700">House Payment</span>
+                  <span className="font-semibold text-red-600">${totalMonthlyHousingCost.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {hasRental && (
+                <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                  <span className="text-gray-700">Rent Payment</span>
+                  <span className="font-semibold text-red-600">${monthlyRent.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {hasCar && (
+                <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                  <span className="text-gray-700">Car Payment</span>
+                  <span className="font-semibold text-red-600">${totalMonthlyCarCost.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {monthlySP500Investment > 0 && (
+                <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                  <span className="text-gray-700">Investment Contribution</span>
+                  <span className="font-semibold text-red-600">${monthlySP500Investment.toLocaleString()}</span>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Financial Health Score */}
+      <div className={`rounded-lg shadow-md p-6 ${gameMode === 'game' ? 'bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-200' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${gameMode === 'game' ? 'text-yellow-900' : 'text-gray-800'}`}>
+          🎯 Financial Health Score
+        </h3>
+        
+        <div className="space-y-4">
+          {(() => {
+            let score = 0;
+            let factors = [];
+            
+            // Investment factor
+            if (monthlySP500Investment > 0) {
+              score += 25;
+              factors.push("✅ Investing for the future");
+            } else {
+              factors.push("❌ Not investing");
+            }
+            
+            // Housing factor
+            if (hasHouse || hasRental) {
+              score += 25;
+              factors.push(hasHouse ? "✅ Homeowner" : "✅ Renting");
+            } else {
+              factors.push("❌ No housing");
+            }
+            
+            // Transportation factor
+            if (hasCar) {
+              score += 20;
+              factors.push("✅ Has transportation");
+            } else {
+              factors.push("❌ No transportation");
+            }
+            
+            // Savings factor
+            if (accumulatedMoney > 0) {
+              score += 20;
+              factors.push("✅ Has savings");
+            } else {
+              factors.push("❌ No savings");
+            }
+            
+            // Income vs expenses factor
+            if (monthlyNetIncome > 0) {
+              score += 10;
+              factors.push("✅ Living within means");
+            } else {
+              factors.push("❌ Spending more than earning");
+            }
+            
+            const getScoreColor = (score: number) => {
+              if (score >= 80) return "text-green-600";
+              if (score >= 60) return "text-yellow-600";
+              if (score >= 40) return "text-orange-600";
+              return "text-red-600";
+            };
+            
+            const getScoreBg = (score: number) => {
+              if (score >= 80) return "bg-green-100";
+              if (score >= 60) return "bg-yellow-100";
+              if (score >= 40) return "bg-orange-100";
+              return "bg-red-100";
+            };
+            
+            return (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${getScoreBg(score)} border-4 border-gray-300`}>
+                    <span className={`text-3xl font-bold ${getScoreColor(score)}`}>
+                      {score}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-lg font-semibold text-gray-800">Financial Health Score</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {factors.map((factor, index) => (
+                    <div key={index} className="p-3 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm">{factor}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* Game Mode Specific Features */}
+      {gameMode === 'game' && (
+        <div className="rounded-lg shadow-md p-6 bg-gradient-to-br from-pink-100 to-purple-100 border-2 border-pink-200">
+          <h3 className="text-lg font-semibold mb-4 text-pink-900">
+            �� Game Mode Features
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🚀</span>
+              <div>
+                <p className="font-semibold text-pink-800">Higher Investment Returns</p>
+                <p className="text-sm text-pink-700">Your investments grow 15% annually instead of 10%!</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🏆</span>
+              <div>
+                <p className="font-semibold text-pink-800">Achievement System</p>
+                <p className="text-sm text-pink-700">Unlock achievements for major life milestones!</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🎨</span>
+              <div>
+                <p className="font-semibold text-pink-800">Colorful Interface</p>
+                <p className="text-sm text-pink-700">Enjoy a more vibrant and engaging experience!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

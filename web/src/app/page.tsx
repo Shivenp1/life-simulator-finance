@@ -25,6 +25,11 @@ export default function Page() {
   const [totalSP500Value, setTotalSP500Value] = useState(0);
   const [activeTab, setActiveTab] = useState("Simulator");
   const [showResetWarning, setShowResetWarning] = useState(false);
+  
+  // Rental property state
+  const [hasRental, setHasRental] = useState(false);
+  const [selectedRental, setSelectedRental] = useState<any>(null);
+  const [monthlyRent, setMonthlyRent] = useState(0);
 
   const simulateYear = () => {
     if (currentYear === 1) {
@@ -65,6 +70,21 @@ export default function Page() {
     }
   };
 
+  const handleRentApartment = (rental: any) => {
+    const securityDeposit = rental.monthlyRent * 1.5; // 1.5 months security deposit
+    if (accumulatedMoney >= securityDeposit) {
+      setHasRental(true);
+      setSelectedRental(rental);
+      setMonthlyRent(rental.monthlyRent);
+      // Subtract security deposit from bank balance
+      setTotalSavings(prev => prev - securityDeposit);
+    }
+  };
+
+  const goToPurchases = () => {
+    setActiveTab("Purchases");
+  };
+
   const handleReset = () => {
     setForm({
       startingSalary: 0,
@@ -83,6 +103,9 @@ export default function Page() {
     setTotalSP500Value(0);
     setActiveTab("Simulator");
     setShowResetWarning(false);
+    setHasRental(false);
+    setSelectedRental(null);
+    setMonthlyRent(0);
   };
 
   const downPayment = housePrice * 0.10;
@@ -134,7 +157,7 @@ export default function Page() {
   const monthlyTakeHome = afterTaxIncome / 12;
   
   const monthlyExpenses = 200 + 300 + 200 + 500 + 300; // Utilities + Groceries + Entertainment + Savings + Other
-  const totalExpenses = monthlyExpenses + totalMonthlyHousingCost + totalMonthlyCarCost + monthlySP500Investment;
+  const totalExpenses = monthlyExpenses + totalMonthlyHousingCost + totalMonthlyCarCost + monthlySP500Investment + (hasRental ? monthlyRent : 0);
 
   // Calculate accumulated money based on years simulated
   const calculateAccumulatedMoney = () => {
@@ -169,7 +192,8 @@ export default function Page() {
       const monthlyHousingExpenses = hasHouse ? totalMonthlyHousingCost : 0;
       const monthlyCarExpenses = hasCar ? totalMonthlyCarCost : 0;
       const monthlyInvestmentExpense = monthlySP500Investment;
-      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses + monthlyCarExpenses + monthlyInvestmentExpense;
+      const monthlyRentalExpense = hasRental ? monthlyRent : 0;
+      const totalMonthlyExpenses = monthlyExpenses + monthlyHousingExpenses + monthlyCarExpenses + monthlyInvestmentExpense + monthlyRentalExpense;
       
       const monthlyNetForYear = monthlyTakeHomeForYear - totalMonthlyExpenses;
       const yearlyNetForYear = Math.max(monthlyNetForYear * 12, 0);
@@ -264,6 +288,9 @@ export default function Page() {
             currentAge={currentAge}
             currentSalary={currentSalary}
             onSimulate={simulateYear}
+            hasHouse={hasHouse}
+            hasRental={hasRental}
+            onGoToPurchases={goToPurchases}
           />
         )}
 
@@ -280,6 +307,11 @@ export default function Page() {
             carPrice={carPrice}
             setCarPrice={setCarPrice}
             onBuyCar={handleBuyCar}
+            hasRental={hasRental}
+            selectedRental={selectedRental}
+            monthlyRent={monthlyRent}
+            onRentApartment={handleRentApartment}
+            accumulatedMoney={accumulatedMoney}
           />
         )}
 
@@ -316,6 +348,9 @@ export default function Page() {
             hasCar={hasCar}
             carPrice={carPrice}
             totalMonthlyCarCost={totalMonthlyCarCost}
+            hasRental={hasRental}
+            selectedRental={selectedRental}
+            monthlyRent={monthlyRent}
           />
         )}
       </div>

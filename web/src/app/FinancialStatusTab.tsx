@@ -13,6 +13,9 @@ interface FinancialStatusTabProps {
   hasCar: boolean;
   carPrice: number;
   totalMonthlyCarCost: number;
+  hasRental: boolean;
+  selectedRental: any;
+  monthlyRent: number;
 }
 
 export const FinancialStatusTab = ({
@@ -29,7 +32,10 @@ export const FinancialStatusTab = ({
   totalSP500Value,
   hasCar,
   carPrice,
-  totalMonthlyCarCost
+  totalMonthlyCarCost,
+  hasRental,
+  selectedRental,
+  monthlyRent
 }: FinancialStatusTabProps) => {
   // NJ Tax calculation (simplified)
   const calculateAfterTaxIncome = (salary: number) => {
@@ -59,12 +65,12 @@ export const FinancialStatusTab = ({
   // Budget categories with typical amounts
   const budgetCategories = [
     { name: "Housing", amount: hasHouse ? totalMonthlyHousingCost : 0, color: "bg-red-100 text-red-800" },
+    { name: "Rent", amount: hasRental ? monthlyRent : 0, color: "bg-pink-100 text-pink-800" },
     { name: "Car", amount: hasCar ? totalMonthlyCarCost : 0, color: "bg-blue-100 text-blue-800" },
     { name: "S&P 500 Investment", amount: monthlySP500Investment, color: "bg-indigo-100 text-indigo-800" },
     { name: "Utilities", amount: 200, color: "bg-orange-100 text-orange-800" },
     { name: "Groceries", amount: 300, color: "bg-yellow-100 text-yellow-800" },
     { name: "Entertainment", amount: 200, color: "bg-purple-100 text-purple-800" },
-    { name: "Savings", amount: 500, color: "bg-indigo-100 text-indigo-800" },
     { name: "Other", amount: 300, color: "bg-gray-100 text-gray-800" }
   ];
 
@@ -131,6 +137,13 @@ export const FinancialStatusTab = ({
                 <>
                   <p><span className="text-gray-600">Car Value:</span> <span className="font-medium text-blue-600">${carPrice.toLocaleString()}</span></p>
                   <p><span className="text-gray-600">Total Monthly Car Cost:</span> <span className="font-medium text-red-600">${totalMonthlyCarCost.toLocaleString()}</span></p>
+                </>
+              )}
+              {hasRental && (
+                <>
+                  <p><span className="text-gray-600">Rental:</span> <span className="font-medium text-pink-600">{selectedRental?.name}</span></p>
+                  <p><span className="text-gray-600">Monthly Rent:</span> <span className="font-medium text-red-600">${monthlyRent.toLocaleString()}</span></p>
+                  <p><span className="text-gray-600">Security Deposit:</span> <span className="font-medium text-orange-600">${(monthlyRent * 1.5).toLocaleString()}</span></p>
                 </>
               )}
               {monthlySP500Investment > 0 && (

@@ -4,7 +4,7 @@ interface SimulatorTabProps {
     salaryGrowthPercent: number;
     age: number;
   };
-  setForm: (form: any) => void;
+  setForm: (form: { startingSalary: number; salaryGrowthPercent: number; age: number; }) => void;
   currentYear: number;
   currentAge: number;
   currentSalary: number;
@@ -12,6 +12,7 @@ interface SimulatorTabProps {
   hasHouse: boolean;
   hasRental: boolean;
   onGoToPurchases: () => void;
+  gameMode: 'game' | 'serious';
 }
 
 export const SimulatorTab = ({
@@ -23,7 +24,8 @@ export const SimulatorTab = ({
   onSimulate,
   hasHouse,
   hasRental,
-  onGoToPurchases
+  onGoToPurchases,
+  gameMode
 }: SimulatorTabProps) => {
   const canAdvance = currentYear === 1 || hasHouse || hasRental;
   const hasHousing = hasHouse || hasRental;
@@ -40,8 +42,10 @@ export const SimulatorTab = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Life Simulator</h2>
+      <div className={`rounded-lg shadow-md p-8 ${gameMode === 'game' ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-200' : 'bg-white'}`}>
+        <h2 className={`text-3xl font-bold mb-6 ${gameMode === 'game' ? 'text-purple-900' : 'text-gray-900'}`}>
+          {gameMode === 'game' ? '🎮 Life Simulator Game' : '📊 Life Simulator'}
+        </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
@@ -84,8 +88,8 @@ export const SimulatorTab = ({
           </div>
         </div>
 
-        <div className="mt-8 p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
-          <h3 className="font-bold text-blue-900 mb-3 text-lg">Current Status</h3>
+        <div className={`mt-8 p-6 rounded-lg border-2 ${gameMode === 'game' ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
+          <h3 className={`font-bold mb-3 text-lg ${gameMode === 'game' ? 'text-purple-900' : 'text-blue-900'}`}>Current Status</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div className="bg-white p-3 rounded border">
               <span className="text-gray-700 font-medium">Year:</span>
@@ -112,7 +116,11 @@ export const SimulatorTab = ({
           {canAdvance ? (
             <button
               onClick={onSimulate}
-              className="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-700 transition-colors shadow-lg"
+              className={`px-8 py-4 text-white rounded-lg font-bold text-lg transition-colors shadow-lg ${
+                gameMode === 'game' 
+                  ? 'bg-purple-600 hover:bg-purple-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               {currentYear === 1 ? 'Complete First Year' : 'Advance to Next Year'}
             </button>
